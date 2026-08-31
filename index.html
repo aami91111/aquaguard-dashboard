@@ -181,8 +181,6 @@
 
   <script>
     const BLYNK_TOKEN = "fk1gMjx0aaEO_OPHAAmAzrhXPidIc_ng";
-    // Using regional Blynk server for direct secure access
-    const BLYNK_SERVER = "https://fra1.blynk.cloud/external/api/get?token=" + BLYNK_TOKEN;
 
     const ctx = document.getElementById('realChart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -210,26 +208,28 @@
     function updateGauge(id, val, max) {
       const circ = 238.7;
       const pct = Math.min(Math.max(val / max, 0), 1);
-      document.getElementById(id).style.strokeDashoffset = circ - (pct * circ);
+      const el = document.getElementById(id);
+      if (el) el.style.strokeDashoffset = circ - (pct * circ);
+    }
+
+    async function getBlynkPin(pin) {
+      const targetUrl = `https://blynk.cloud/external/api/get?token=${BLYNK_TOKEN}&${pin}`;
+      // Use CORS proxy when running on GitHub Pages
+      const url = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+      const res = await fetch(url);
+      return await res.text();
     }
 
     async function fetchSensors() {
       try {
-        const [r1, r2, r3, r4, r5, r6] = await Promise.all([
-          fetch(`${BLYNK_SERVER}&V1`),
-          fetch(`${BLYNK_SERVER}&V2`),
-          fetch(`${BLYNK_SERVER}&V3`),
-          fetch(`${BLYNK_SERVER}&V4`),
-          fetch(`${BLYNK_SERVER}&V5`),
-          fetch(`${BLYNK_SERVER}&V6`)
+        const [rawPh, rawTds, rawTurb, rawTemp, rawRisk, rawDecision] = await Promise.all([
+          getBlynkPin('V1'),
+          getBlynkPin('V2'),
+          getBlynkPin('V3'),
+          getBlynkPin('V4'),
+          getBlynkPin('V5'),
+          getBlynkPin('V6')
         ]);
-
-        const rawPh = await r1.text();
-        const rawTds = await r2.text();
-        const rawTurb = await r3.text();
-        const rawTemp = await r4.text();
-        const rawRisk = await r5.text();
-        const rawDecision = await r6.text();
 
         const ph = !rawPh.includes("error") && !rawPh.includes("Invalid") ? parseFloat(rawPh) || 7.0 : 7.0;
         const tds = !rawTds.includes("error") && !rawTds.includes("Invalid") ? parseFloat(rawTds) || 0 : 0;
@@ -297,7 +297,7 @@
     }, 1000);
 
     fetchSensors();
-    setInterval(fetchSensors, 2500);
+    setInterval(fetchSensors, 3000);
   </script>
 </body>
 </html>
