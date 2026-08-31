@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaGuard AI Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body {
+      background-color: #0f172a;
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    .panel-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 0.75rem;
+    }
+    .gauge-bg {
+      stroke: #334155;
+      fill: none;
+      stroke-width: 7;
+    }
+    .gauge-val {
+      fill: none;
+      stroke-width: 7;
+      stroke-linecap: round;
+      transition: stroke-dashoffset 0.6s ease;
+    }
+  </style>
+</head>
+<body class="p-4 md:p-6">
+  <div class="max-w-6xl mx-auto space-y-4">
+    
+    <!-- Header Bar -->
+    <header class="panel-card p-4 flex flex-wrap justify-between items-center gap-3 border-l-4 border-l-cyan-500">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-xl">💧</span>
+          <h1 class="text-lg font-bold text-white tracking-wide">AquaGuard AI Monitoring Console</h1>
+        </div>
+        <p class="text-xs text-slate-400">Autonomous Stagnant Water Quality & Vector Risk Assessment</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-xs px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 font-semibold border border-emerald-500/30 flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span> ONLINE / ESP32
+        </span>
+        <span id="liveClock" class="text-xs bg-slate-900/80 px-3 py-1 rounded-md text-slate-300 font-mono border border-slate-700">--:--:--</span>
+      </div>
+    </header>
+
+    <!-- Main Grid Layout -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
+      
+      <!-- Left Column (Sensors & AI) -->
+      <div class="lg:col-span-2 space-y-4">
+        
+        <!-- 4 Metric Cards / Gauges -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          
+          <!-- Temp -->
+          <div class="panel-card p-3 flex flex-col items-center justify-between text-center">
+            <span class="text-[11px] font-semibold text-rose-400 uppercase tracking-wider">Temp (°C)</span>
+            <div class="relative w-20 h-20 my-1 flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="38" />
+                <circle id="g-temp" class="gauge-val stroke-rose-500" cx="50" cy="50" r="38" stroke-dasharray="238.7" stroke-dashoffset="238.7" />
+              </svg>
+              <span id="v-temp" class="absolute text-lg font-bold font-mono">--</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">GPIO 33</span>
+          </div>
+
+          <!-- pH -->
+          <div class="panel-card p-3 flex flex-col items-center justify-between text-center">
+            <span class="text-[11px] font-semibold text-cyan-400 uppercase tracking-wider">pH Level</span>
+            <div class="relative w-20 h-20 my-1 flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="38" />
+                <circle id="g-ph" class="gauge-val stroke-cyan-400" cx="50" cy="50" r="38" stroke-dasharray="238.7" stroke-dashoffset="238.7" />
+              </svg>
+              <span id="v-ph" class="absolute text-lg font-bold font-mono">--</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">GPIO 34</span>
+          </div>
+
+          <!-- Turbidity -->
+          <div class="panel-card p-3 flex flex-col items-center justify-between text-center">
+            <span class="text-[11px] font-semibold text-amber-400 uppercase tracking-wider">Turbidity</span>
+            <div class="relative w-20 h-20 my-1 flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="38" />
+                <circle id="g-turb" class="gauge-val stroke-amber-400" cx="50" cy="50" r="38" stroke-dasharray="238.7" stroke-dashoffset="238.7" />
+              </svg>
+              <span id="v-turb" class="absolute text-lg font-bold font-mono">--</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">GPIO 35</span>
+          </div>
+
+          <!-- TDS -->
+          <div class="panel-card p-3 flex flex-col items-center justify-between text-center">
+            <span class="text-[11px] font-semibold text-emerald-400 uppercase tracking-wider">TDS Salinity</span>
+            <div class="relative w-20 h-20 my-1 flex items-center justify-center">
+              <svg class="w-full h-full -rotate-90" viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="38" />
+                <circle id="g-tds" class="gauge-val stroke-emerald-400" cx="50" cy="50" r="38" stroke-dasharray="238.7" stroke-dashoffset="238.7" />
+              </svg>
+              <span id="v-tds" class="absolute text-lg font-bold font-mono">--</span>
+            </div>
+            <span class="text-[10px] text-slate-400 font-mono">GPIO 32</span>
+          </div>
+
+        </div>
+
+        <!-- AI Engine Evaluation -->
+        <div class="panel-card p-4 space-y-2 border-t-2 border-t-cyan-500/40">
+          <div class="flex justify-between items-center">
+            <span class="text-xs font-bold text-slate-300 uppercase tracking-wide flex items-center gap-1.5">
+              <span>🧠</span> AI Risk & Inference Engine
+            </span>
+            <span id="aiBadge" class="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">OPTIMAL</span>
+          </div>
+          <div class="grid grid-cols-3 gap-3 items-center pt-1">
+            <div class="bg-slate-900/60 p-2.5 rounded-lg text-center border border-slate-800">
+              <div class="text-[10px] text-slate-400 uppercase">Risk Level</div>
+              <div id="v-risk" class="text-xl font-black text-cyan-400 font-mono">--%</div>
+            </div>
+            <div class="col-span-2 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
+              <div class="text-[10px] text-cyan-400 font-semibold uppercase mb-0.5">Automated Inference:</div>
+              <p id="v-decision" class="text-xs text-slate-300 truncate">Evaluating telemetry...</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Telemetry Chart -->
+        <div class="panel-card p-4">
+          <div class="text-xs font-semibold text-slate-300 mb-2">Live Parameter Dynamics</div>
+          <div class="h-44 w-full">
+            <canvas id="realChart"></canvas>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Column (Diagnostic Panel) -->
+      <div class="space-y-4">
+        <div class="panel-card p-4 space-y-4">
+          <div class="border-b border-slate-700/60 pb-2.5 flex justify-between items-center">
+            <h3 class="text-xs font-bold text-white uppercase tracking-wider">Sensor Diagnostics</h3>
+            <span class="text-[10px] bg-slate-900 px-2 py-0.5 rounded text-cyan-400 font-mono border border-slate-700">LIVE FEED</span>
+          </div>
+          
+          <div class="space-y-2 text-xs">
+            <div class="bg-slate-900/50 p-2 rounded flex justify-between items-center border border-slate-800">
+              <span class="text-slate-400">pH Assessment</span>
+              <span id="rep-ph" class="font-medium text-emerald-400">Checking...</span>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded flex justify-between items-center border border-slate-800">
+              <span class="text-slate-400">Water Clarity</span>
+              <span id="rep-turb" class="font-medium text-emerald-400">Checking...</span>
+            </div>
+            <div class="bg-slate-900/50 p-2 rounded flex justify-between items-center border border-slate-800">
+              <span class="text-slate-400">Salinity / TDS</span>
+              <span id="rep-tds" class="font-medium text-emerald-400">Checking...</span>
+            </div>
+          </div>
+
+          <div class="space-y-1.5">
+            <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Prescriptive Recommendations</div>
+            <div id="rep-solution" class="bg-cyan-950/30 border border-cyan-800/40 p-3 rounded-lg text-xs text-cyan-200 leading-relaxed">
+              <div class="font-bold text-cyan-400 mb-1">✔ Node Synchronized</div>
+              Receiving live telemetry stream from ESP32.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const BLYNK_TOKEN = "fk1gMjx0aaEO_OPHAAmAzrhXPidIc_ng";
+    const BLYNK_API = "https://blynk.cloud/external/api/get?token=" + BLYNK_TOKEN;
+
+    const ctx = document.getElementById('realChart').getContext('2d');
+    const chart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: [],
+        datasets: [
+          { label: 'Temp', borderColor: '#f43f5e', data: [], tension: 0.3, pointRadius: 0, borderWidth: 1.5 },
+          { label: 'pH', borderColor: '#22d3ee', data: [], tension: 0.3, pointRadius: 0, borderWidth: 1.5 },
+          { label: 'Turbidity', borderColor: '#fbbf24', data: [], tension: 0.3, pointRadius: 0, borderWidth: 1.5 },
+          { label: 'TDS', borderColor: '#34d399', data: [], tension: 0.3, pointRadius: 0, borderWidth: 1.5 }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          x: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#33415540' } },
+          y: { ticks: { color: '#64748b', font: { size: 9 } }, grid: { color: '#33415540' } }
+        },
+        plugins: { legend: { labels: { color: '#cbd5e1', font: { size: 10 } } } }
+      }
+    });
+
+    function updateGauge(id, val, max) {
+      const circ = 238.7;
+      const pct = Math.min(Math.max(val / max, 0), 1);
+      document.getElementById(id).style.strokeDashoffset = circ - (pct * circ);
+    }
+
+    async function fetchSensors() {
+      try {
+        const [r1, r2, r3, r4, r5, r6] = await Promise.all([
+          fetch(`${BLYNK_API}&V1`),
+          fetch(`${BLYNK_API}&V2`),
+          fetch(`${BLYNK_API}&V3`),
+          fetch(`${BLYNK_API}&V4`),
+          fetch(`${BLYNK_API}&V5`),
+          fetch(`${BLYNK_API}&V6`)
+        ]);
+
+        const rawPh = await r1.text();
+        const rawTds = await r2.text();
+        const rawTurb = await r3.text();
+        const rawTemp = await r4.text();
+        const rawRisk = await r5.text();
+        const rawDecision = await r6.text();
+
+        const ph = !rawPh.includes("error") ? parseFloat(rawPh) || 7.0 : 7.0;
+        const tds = !rawTds.includes("error") ? parseFloat(rawTds) || 0 : 0;
+        const turb = !rawTurb.includes("error") ? parseFloat(rawTurb) || 0 : 0;
+        const temp = !rawTemp.includes("error") ? parseFloat(rawTemp) || 25.0 : 25.0;
+        const risk = !rawRisk.includes("error") ? parseInt(rawRisk) || 0 : 0;
+        const decision = !rawDecision.includes("error") ? rawDecision : "Normal: Parameters stable";
+
+        document.getElementById('v-temp').innerText = temp.toFixed(1);
+        document.getElementById('v-ph').innerText = ph.toFixed(2);
+        document.getElementById('v-turb').innerText = turb.toFixed(0);
+        document.getElementById('v-tds').innerText = tds.toFixed(0);
+        document.getElementById('v-risk').innerText = risk + "%";
+        document.getElementById('v-decision').innerText = decision;
+
+        updateGauge('g-temp', temp, 100);
+        updateGauge('g-ph', ph, 14);
+        updateGauge('g-turb', turb, 100);
+        updateGauge('g-tds', tds, 2000);
+
+        const repPh = document.getElementById('rep-ph');
+        if (ph < 6.5) { repPh.innerText = "Acidic"; repPh.className = "text-rose-400 font-medium"; }
+        else if (ph > 8.5) { repPh.innerText = "Alkaline"; repPh.className = "text-amber-400 font-medium"; }
+        else { repPh.innerText = "Optimal"; repPh.className = "text-emerald-400 font-medium"; }
+
+        const repTurb = document.getElementById('rep-turb');
+        if (turb > 40) { repTurb.innerText = "Turbid"; repTurb.className = "text-rose-400 font-medium"; }
+        else { repTurb.innerText = "Clear"; repTurb.className = "text-emerald-400 font-medium"; }
+
+        const repTds = document.getElementById('rep-tds');
+        if (tds > 500) { repTds.innerText = "High Salinity"; repTds.className = "text-amber-400 font-medium"; }
+        else { repTds.innerText = "Safe"; repTds.className = "text-emerald-400 font-medium"; }
+
+        const badge = document.getElementById('aiBadge');
+        if (risk >= 70) {
+          badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-400 border border-rose-500/30";
+          badge.innerText = "HIGH RISK";
+        } else if (risk >= 35) {
+          badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30";
+          badge.innerText = "MODERATE";
+        } else {
+          badge.className = "text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30";
+          badge.innerText = "OPTIMAL";
+        }
+
+        const now = new Date().toLocaleTimeString();
+        if (chart.data.labels.length > 10) {
+          chart.data.labels.shift();
+          chart.data.datasets.forEach(d => d.data.shift());
+        }
+        chart.data.labels.push(now);
+        chart.data.datasets[0].data.push(temp);
+        chart.data.datasets[1].data.push(ph);
+        chart.data.datasets[2].data.push(turb);
+        chart.data.datasets[3].data.push(tds);
+        chart.update();
+
+      } catch (e) {
+        console.log("Sync error:", e);
+      }
+    }
+
+    setInterval(() => {
+      document.getElementById('liveClock').innerText = new Date().toLocaleTimeString();
+    }, 1000);
+
+    fetchSensors();
+    setInterval(fetchSensors, 2500);
+  </script>
+</body>
+</html>
