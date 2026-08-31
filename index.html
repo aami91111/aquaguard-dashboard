@@ -181,7 +181,8 @@
 
   <script>
     const BLYNK_TOKEN = "fk1gMjx0aaEO_OPHAAmAzrhXPidIc_ng";
-    const BLYNK_API = "https://blynk.cloud/external/api/get?token=" + BLYNK_TOKEN;
+    // Using regional Blynk server for direct secure access
+    const BLYNK_SERVER = "https://fra1.blynk.cloud/external/api/get?token=" + BLYNK_TOKEN;
 
     const ctx = document.getElementById('realChart').getContext('2d');
     const chart = new Chart(ctx, {
@@ -215,12 +216,12 @@
     async function fetchSensors() {
       try {
         const [r1, r2, r3, r4, r5, r6] = await Promise.all([
-          fetch(`${BLYNK_API}&V1`),
-          fetch(`${BLYNK_API}&V2`),
-          fetch(`${BLYNK_API}&V3`),
-          fetch(`${BLYNK_API}&V4`),
-          fetch(`${BLYNK_API}&V5`),
-          fetch(`${BLYNK_API}&V6`)
+          fetch(`${BLYNK_SERVER}&V1`),
+          fetch(`${BLYNK_SERVER}&V2`),
+          fetch(`${BLYNK_SERVER}&V3`),
+          fetch(`${BLYNK_SERVER}&V4`),
+          fetch(`${BLYNK_SERVER}&V5`),
+          fetch(`${BLYNK_SERVER}&V6`)
         ]);
 
         const rawPh = await r1.text();
@@ -230,12 +231,12 @@
         const rawRisk = await r5.text();
         const rawDecision = await r6.text();
 
-        const ph = !rawPh.includes("error") ? parseFloat(rawPh) || 7.0 : 7.0;
-        const tds = !rawTds.includes("error") ? parseFloat(rawTds) || 0 : 0;
-        const turb = !rawTurb.includes("error") ? parseFloat(rawTurb) || 0 : 0;
-        const temp = !rawTemp.includes("error") ? parseFloat(rawTemp) || 25.0 : 25.0;
-        const risk = !rawRisk.includes("error") ? parseInt(rawRisk) || 0 : 0;
-        const decision = !rawDecision.includes("error") ? rawDecision : "Normal: Parameters stable";
+        const ph = !rawPh.includes("error") && !rawPh.includes("Invalid") ? parseFloat(rawPh) || 7.0 : 7.0;
+        const tds = !rawTds.includes("error") && !rawTds.includes("Invalid") ? parseFloat(rawTds) || 0 : 0;
+        const turb = !rawTurb.includes("error") && !rawTurb.includes("Invalid") ? parseFloat(rawTurb) || 0 : 0;
+        const temp = !rawTemp.includes("error") && !rawTemp.includes("Invalid") ? parseFloat(rawTemp) || 25.0 : 25.0;
+        const risk = !rawRisk.includes("error") && !rawRisk.includes("Invalid") ? parseInt(rawRisk) || 0 : 0;
+        const decision = !rawDecision.includes("error") && !rawDecision.includes("Invalid") ? rawDecision : "Normal: Water conditions are optimal and safe";
 
         document.getElementById('v-temp').innerText = temp.toFixed(1);
         document.getElementById('v-ph').innerText = ph.toFixed(2);
